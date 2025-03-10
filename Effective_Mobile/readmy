@@ -1,0 +1,14 @@
+//1 создать базу данных pg 
+sudo -i -u postgres
+psql
+CREATE DATABASE db_requests WITH OWNER = postgres;
+//2 создать пользователя
+\c db_requests
+CREATE USER userpg WITH PASSWORD '1234' SUPERUSER;
+\q
+exit
+//3 открыть корень проекта
+npm i
+npm run start:prod
+//4 вбраузере 
+http://localhost:3000/

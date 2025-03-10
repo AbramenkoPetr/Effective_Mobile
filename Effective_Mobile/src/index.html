@@ -1,0 +1,342 @@
+<div id="form">
+<div style="margin-top: 10px; margin-left: 20px;">
+<div>Введите начальную и конечную дату для поиска обращений</div>
+<div>Для поиска по конкретной дате, введите только начальную</div>
+<div>Чтобы получить весь список, оставьте все поля свободными</div>
+</div>
+
+<form id="myForm" style="margin-top: 10px; margin-left: 20px;">
+    <input type="text" name="ys" placeholder="Год начальной даты">
+    <input type="text" name="ms" placeholder="Месяц начальной даты">
+    <input type="text" name="ds" placeholder="Число начальной даты"><br>
+    <input type="text" name="ye" placeholder="Год конечной даты">
+    <input type="text" name="me" placeholder="Месяц конечной даты">
+    <input type="text" name="de" placeholder="Число конечной даты">
+    <!-- <button type="submit">Submit</button> -->
+  </form>
+    </div>
+    <div class="reqForm">
+    <form id="reqForm" style="margin-top: 10px; margin-left: 20px;">
+        <textarea rows="4" cols="50" name="theme" placeholder="Тема обращения"></textarea>
+        <textarea rows="4" cols="50" name="request" placeholder="Текст обращения"></textarea>
+        
+        <button id="creat-reqest" style="margin-bottom: 50px; vertical-align: middle;">Создать обращение</button>
+    </form>
+    </div>
+
+   
+
+  <div id = "button-list-requests" style="margin-left: 20px;"><button>Список обращений</button></div>
+<div id = "list-requests"; style="white-space: pre-wrap;" > </div>
+<div  id = "strg-btn"><button id = "new-request">Новое обращение</button>
+    <div id = list-req-btn; ><button id="job-all-cancel">Отменить все "В работе"</button></div>
+    <a href= /><button >На главную</button></a></div>
+
+    
+            <div >
+                <form id="answerForm" >
+                    <div>
+                    <textarea id="text_answer" rows="4" cols="50" name="answer" placeholder="Текст ответа"></textarea>
+                    
+                    
+                    <button id="answer1" style="margin-bottom: 50px; vertical-align: middle;">Отправить</button>
+                    </div>
+                </form>
+                </div>
+
+<script>
+    var text_answer
+    
+    const PORT = 3000;
+    const host = 'http://localhost:3000';
+    // var id1 = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')[0];
+    // console.log('id1 = ',id1);
+
+    const form = document.getElementById('myForm');
+    let formData;
+
+
+
+    let element = document.getElementById("list-requests");
+    let array_req=[];
+    let ind_cacel;
+    document.getElementById('button-list-requests').addEventListener('click', function(event) {
+        event.preventDefault();
+        formData = new FormData(form);
+
+        document.getElementById('form').innerHTML ='';
+        document.getElementById('button-list-requests').style.display= 'none';
+        element.innerHTML += '<div class= "strg-arnd"; style = "margin-bottom: 20px;">'+'<div style = "width: 50px;">id</div> '+'<div  style = "width: 100px;">Статус</div>'+
+        '<div  style = "width: 100px;">Тема</div>'+'<div  style = "width: 250px;">Текст обращеня</div>'+'<div  style = "width: 200px;">Ответ на обращение</div>'+
+        '<div  style = "width: 200px;">Причина отмены</div>'+'<div>Дата обращения</div>'+
+        '</div>'
+        document.getElementById('strg-btn').setAttribute( "style", "display: flex; justify-content: space-around;" );
+fetch('/list-of-requests', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+             ds: formData.get('ds'),
+             ms: formData.get('ms'),
+             ys: formData.get('ys'),
+                de: formData.get('de'),
+                me: formData.get('me'),
+                ye: formData.get('ye')
+  }) // данные для отправки
+})
+.then(res => res.json())
+//.then(data => (element.innerHTML = JSON.stringify(data))
+    .then(data => (
+        
+        data.forEach(function(elem, index) {
+        //console.log(elem, index)
+            //element.innerHTML += '<div id =' + index+' >'+JSON.stringify(elem)+'</div>'/*"<br>"*/
+            element.innerHTML += '<div class= "strg-arnd";  id =' + elem.id+' >'+'<div style = "width: 50px;">'+elem.id+'</div> '+'<div  style = "width: 100px;">'+elem.status+'</div>'+
+            '<div  style = "width: 100px;">'+elem.theme+'</div>'+'<div  style = "width: 250px;">'+elem.request+'</div>'+'<div  style = "width: 200px;">'+elem.reply+'</div>'+
+            '<div  style = "width: 200px;">'+elem.reason_for_cancellation+'</div>'+'<div>'+elem.date+'</div>'+
+            '<button id="'+elem.id+'" onClick="reply_click('+index+')">Выбрать</button>'+'</div>'
+            array_req[index] = elem
+        })
+        
+        //(console.log('/list-of-requests array_req', array_req))
+        
+    )
+)
+.catch(error => console.error('Ошибка:', error));
+
+
+
+});
+
+
+document.getElementById('job-all-cancel').addEventListener('click', function() {
+    console.log('job-all-cancel');
+    console.log(formData.get('ds'));
+    element.innerHTML = '';
+    element.innerHTML += '<div> id Статус Тема</div>'
+    fetch('/job-all-cancel', {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'},
+    })
+    .then(res => res.json())
+    .then(data => (
+        //console.log(data.raw)
+        data.raw.forEach(function(elem, index) {
+            console.log(elem, index)
+            element.innerHTML += '<div>' +elem.id+" "+elem.status+" "+elem.theme+" "+'</div>'
+            
+
+        })
+        
+    ))
+})
+
+
+document.getElementById('new-request').addEventListener('click', function() {
+    console.log('new-reqest');
+    document.getElementById('reqForm').setAttribute( "style", "display: flex; justify-content: space-around;" );
+    document.getElementById('strg-btn').setAttribute( "style", "display: none; " );
+    element.innerHTML = '';
+    document.getElementById('creat-reqest').addEventListener('click', function(event) {
+        event.preventDefault();
+        const form = document.getElementById('reqForm');
+        const formData = new FormData(form);
+        console.log('creat-reqest');
+        console.log('/new-reqest formData ', formData);
+        //return
+        const theme = formData.get('theme');
+        const request = formData.get('request');
+        if(theme === '' || request === '') {element.innerHTML += 'Оба поля должны быть заполнены'; return;}
+        console.log('theme ', theme);
+        
+        
+        fetch('/create-request', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                theme: formData.get('theme'),
+                request: formData.get('request'),
+                status: "Новое"
+                
+            }) // данные для отправки
+        })
+        .then(res => res.json())
+        .then(data => (
+            
+            console.log(data)
+            (alert(`Создано новое обращение: id: ${data.id}, статус: ${data.status}`))
+            
+            
+        ))
+        .catch(error => console.error('Ошибка:', error));
+        
+    })
+    document.getElementById('strg-btn').setAttribute( "style", "display: flex; justify-content: space-around;" )
+        document.getElementById('job-all-cancel').setAttribute( "style", "display: none;" )
+        document.getElementById('new-request').setAttribute( "style", "display: none;" )
+})
+
+
+function reply_click(ind)
+  { 
+    //console.log(array_req);  
+    
+      //alert(ind/*, index*/);
+      //console.log(array_req);
+      
+      element.innerHTML = "";
+      const el = document.getElementById('button-list-requests').style.display= 'none';
+      //el.style.display= 'none';
+      element.innerHTML += '<div class= "strg-arnd"; style = "margin-bottom: 20px;">'+'<div style = "width: 50px;">id</div> '+'<div  style = "width: 100px;">Статус</div>'+
+        '<div  style = "width: 100px;">Тема</div>'+'<div  style = "width: 250px;">Текст обращеня</div>'+'<div  style = "width: 200px;">Ответ на обращение</div>'+
+        '<div  style = "width: 200px;">Причина отмены</div>'+'<div>Дата обращения</div>'+
+        '</div>'
+        element.innerHTML += '<div class= "strg-arnd";  id =' + array_req[ind].id+' >'+'<div style = "width: 50px;">'+array_req[ind].id+'</div> '+'<div  style = "width: 100px;">'+array_req[ind].status+'</div>'+
+        '<div  style = "width: 100px;">'+array_req[ind].theme+'</div>'+'<div  style = "width: 250px;">'+array_req[ind].request+'</div>'+'<div  style = "width: 200px;">'+array_req[ind].reply+'</div>'+
+        '<div  style = "width: 200px;">'+array_req[ind].reason_for_cancellation+'</div>'+'<div>'+array_req[ind].date+'</div>'+
+        '</div>'
+        document.getElementById('strg-btn').setAttribute( "style", "display: none")
+        element.innerHTML += '<div id= "str_elem";></div>';
+        const str_elem = document.getElementById('str_elem');
+        console.log(str_elem);
+        if(array_req[ind].status === 'Новое')str_elem.innerHTML += '<button id="take-on-job" onClick="takeOnJob('+ind+')">В работу</button>'
+        if(array_req[ind].status == 'В работе')str_elem.innerHTML += '<button onClick="inputAnswer('+ind+',`complete`)">Завершить</button>'
+        if(array_req[ind].status != 'Завершено' && array_req[ind].status != 'Отменено')str_elem.innerHTML += '<button onClick="inputAnswer('+ind+',`cancel`)">Отменить</button>'
+        
+        ind_cacel = ind
+        str_elem.innerHTML += '<a href "/"><button>На главную</button></a>'
+
+  }
+
+  
+    function takeOnJob(ind) {
+    console.log('take-on-job');
+    console.log(array_req[ind].id);
+    
+    fetch('/take-on-job?id='+array_req[ind].id, {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'},
+    })
+    .then(res => res.json())
+    .then(data => (
+        //console.log(data.raw)
+        data.raw.forEach(function(elem, index) {
+            //console.log(elem, index)
+            //element.innerHTML += '<div>' +elem.id+" "+elem.status+" "+elem.theme+" "+'</div>'
+            
+
+        })
+        (alert(`Обращение взято в работу: id: ${data.raw[0].id}, статус: ${data.raw[0].status}`))
+    ))
+    }//)
+//})
+
+function inputAnswer(ind, param) {
+    console.log(ind, param)
+    //element.innerHTML = '';
+    document.getElementById('answerForm').setAttribute( "style", "display: block; justify-content: space-around;" );
+    document.getElementById('str_elem').setAttribute( "style", "display: none" )
+    
+    document.getElementById('answer1').addEventListener('click', function(event) {
+        event.preventDefault();
+        text_answer = document.getElementById('text_answer').value
+        //alert('inputAnswer ', text_answer)
+        //alert('inputAnswer return')
+        if(param === 'cancel') {
+            const cancel = {id: array_req[ind].id, reply: text_answer}
+            console.log('cancel ', cancel);
+            //alert('inputAnswer cancel ', cancel)
+            cancelRequest(cancel)
+        }
+
+        if(param === 'complete') {
+            const complete = {id: array_req[ind].id, reply: text_answer}
+            console.log('complete ', complete);
+            alert('inputAnswer complete ', complete)
+            completeRequest(complete)
+        }
+        document.getElementById('strg-btn').setAttribute( "style", "display: flex; justify-content: space-around;" )
+        
+    })
+}
+
+function completeRequest(complete) {
+    console.log('complete-request');
+    
+    fetch('/complete-request', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(complete) // данные для отправки
+    })
+    .then(res => res.json())
+    .then(data => (
+        //(console.log(data.raw))
+         
+             (element.innerHTML += '<br><div>id = ' +data.raw[0].id+" "+data.raw[0].status+'</div>')
+        
+        
+    ))
+    document.getElementById('answerForm').setAttribute( "style", "display: none" );
+   
+    }
+
+function cancelRequest(cancel) {
+    //console.log('cancel-request');
+    
+    fetch('/cancel-request', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(cancel) // данные для отправки
+    })
+    .then(res => res.json())
+    .then(data => (
+        
+             (element.innerHTML += '<br><div>id = ' +data.raw[0].id+" "+data.raw[0].status+'</div>')
+        
+    ))
+    document.getElementById('answerForm').setAttribute( "style", "display: none" );
+    
+    }
+
+</script>
+
+
+<style>
+    .strg-arnd  {
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .strg-arnd > * {
+        
+        margin-left: 7px;
+    }
+    #strg-btn   {
+        /* display: flex;
+        justify-content: space-around; */
+        display: none;
+
+        margin-top: 20px;
+    }
+
+    /* #list-req-btn    {
+        display: none;
+
+    } */
+     #reqForm   {
+        height: 70px;
+        display: none;
+     }
+
+     #str_elem  {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+     }
+
+     #answerForm {
+        margin-top: 10px;
+        margin-left: 20px;
+        display: none;
+     }
+    
+</style>
